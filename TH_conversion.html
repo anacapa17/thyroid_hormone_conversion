@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thyroid Hormone Conversion Calculator</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.5;
+    }
+    h1, h2 { margin-top: 2rem; }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      background: #fafafa;
+    }
+    label { display: block; margin-top: 12px; font-weight: 600; }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 1rem;
+    }
+    .output { margin-top: 10px; font-weight: bold; }
+    .warning { color: #b45309; font-weight: 600; }
+    .note { font-size: 0.9rem; color: #555; }
+  </style>
+</head>
+<body>
+
+<h1>Thyroid Hormone Conversion Calculator</h1>
+<p class="note">Clinical decision‑support tool. Educational use only.</p>
+
+<!-- CURRENT REGIMEN -->
+<div class="card">
+  <h2>1. Current LT4 + LT3 Regimen</h2>
+
+  <label>Current LT4 dose (mcg)</label>
+  <input type="number" id="currT4" value="112" min="0" />
+
+  <label>Current LT3 dose (mcg)</label>
+  <input type="number" id="currT3" value="7.5" min="0" />
+
+  <div class="output">T4:T3 ratio: <span id="currRatio">—</span></div>
+  <div class="output warning" id="currRatioWarn"></div>
+</div>
+
+<!-- LT4 EQUIVALENT -->
+<div class="card">
+  <h2>2. LT4‑Equivalent Dose</h2>
+
+  <label>LT3 → LT4 conversion factor</label>
+  <select id="equivFactor">
+    <option value="3">3 : 1</option>
+    <option value="4">4 : 1</option>
+  </select>
+
+  <div class="output">LT4‑equivalent dose: <span id="lt4Equiv">—</span> mcg</div>
+</div>
+
+<!-- GOAL DIRECTED -->
+<div class="card">
+  <h2>3. Goal‑Directed Ratio Targeting</h2>
+
+  <label>Total LT4‑equivalent dose (mcg)</label>
+  <input type="number" id="goalTotal" value="123" min="0" />
+
+  <label>Desired T4:T3 ratio</label>
+  <input type="number" id="goalRatio" value="14" step="0.1" />
+
+  <label>Desired T3 conversion</label>
+  <select id="t3Strength">
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
+
+  <div class="output">Suggested LT4 dose: <span id="goalLT4">—</span> mcg</div>
+  <div class="output">Suggested LT3 dose: <span id="goalLT3">—</span> mcg</div>
+</div>
+
+<!-- SIMPLE CONVERSION -->
+<div class="card">
+  <h2>4. LT4 → LT3 Conversion</h2>
+
+  <label>LT4 dose to convert (mcg)</label>
+  <input type="number" id="simpleT4" value="100" min="0" />
+
+  <label>Conversion assumption</label>
+  <select id="simpleFactor">
+    <option value="3">3 : 1</option>
+    <option value="4">4 : 1</option>
+  </select>
+
+  <div class="output">Equivalent LT3 dose: <span id="simpleT3">—</span> mcg</div>
+</div>
+
+<!-- ARMOUR -->
+<div class="card">
+  <h2>5. Armour Thyroid Conversion</h2>
+
+  <label>Armour dose (grains)</label>
+  <input type="number" id="armourGrains" value="1" step="0.25" />
+
+  <div class="output">Armour mg: <span id="armourMg">—</span> mg</div>
+  <div class="output">T4: <span id="armourT4">—</span> mcg</div>
+  <div class="output">T3: <span id="armourT3">—</span> mcg</div>
+  <div class="output">LT4‑equivalent: <span id="armourEquiv">—</span> mcg</div>
+</div>
+
+<!-- REFERENCES -->
+<div class="card">
+  <h2>Assumptions</h2>
+  <ul class="note">
+    <li>Goal T4:T3 ratio commonly cited as ~13–16:1</li>
+    <li>LT4:LT3 potency approximated as 3:1 or 4:1</li>
+    <li>Armour: 1 grain = 60 mg ≈ T4 38 mcg + T3 9 mcg</li>
+  </ul>
+</div>
+
+<script>
+function update() {
+  const currT4 = +currT4Input.value;
+  const currT3 = +currT3Input.value;
+  if (currT3 > 0) {
+    const r = currT4 / currT3;
+    currRatio.textContent = r.toFixed(1) + ':1';
+    currRatioWarn.textContent = (r < 13 || r > 16) ? 'Outside typical 13–16:1 range' : '';
+  }
+
+  const factor = +equivFactor.value;
+  const lt4eq = currT4 + currT3 * factor;
+  lt4Equiv.textContent = lt4eq.toFixed(1);
+
+  const total = +goalTotal.value;
+  const ratio = +goalRatio.value;
+  const goalT3 = total / (ratio + 1);
+  const goalT4 = total - goalT3;
+  goalLT3.textContent = goalT3.toFixed(2);
+  goalLT4.textContent = goalT4.toFixed(1);
+
+  const simpleT3 = +simpleT4.value / +simpleFactor.value;
+  simpleT3Span.textContent = simpleT3.toFixed(2);
+
+  const grains = +armourGrains.value;
+  const mg = grains * 60;
+  const t4 = grains * 38;
+  const t3 = grains * 9;
+  armourMg.textContent = mg.toFixed(0);
+  armourT4.textContent = t4.toFixed(1);
+  armourT3.textContent = t3.toFixed(1);
+  armourEquiv.textContent = (t4 + t3 * 4).toFixed(1);
+}
+
+const ids = document.querySelectorAll('input, select');
+ids.forEach(el => el.addEventListener('input', update));
+
+const [
+  currT4Input,currT3Input,equivFactor,goalTotal,goalRatio,t3Strength,
+  simpleT4,simpleFactor,armourGrains
+] = ids;
+
+const currRatio = document.getElementById('currRatio');
+const currRatioWarn = document.getElementById('currRatioWarn');
+const lt4Equiv = document.getElementById('lt4Equiv');
+const goalLT4 = document.getElementById('goalLT4');
+const goalLT3 = document.getElementById('goalLT3');
+const simpleT3Span = document.getElementById('simpleT3');
+const armourMg = document.getElementById('armourMg');
+const armourT4 = document.getElementById('armourT4');
+const armourT3 = document.getElementById('armourT3');
+const armourEquiv = document.getElementById('armourEquiv');
+
+update();
+</script>
+
+</body>
+</html>
